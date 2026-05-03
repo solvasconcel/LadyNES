@@ -9,13 +9,19 @@ namespace GUI {
 // Screen size:
 const unsigned WIDTH  = 256;
 const unsigned HEIGHT = 240;
+const unsigned LAUNCHER_WIDTH  = 900;
+const unsigned LAUNCHER_HEIGHT = 480;
 const int TEXT_CENTER  = -1;
 const int TEXT_RIGHT   = -2;
 const unsigned FONT_SZ = 15;
 
+// Game state
+extern bool is_ingame;
+
 void init();
 void toggle_pause();
 void set_paused(bool paused);
+void close_game();
 SDL_Scancode query_key();
 int query_button();
 void run();

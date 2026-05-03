@@ -12,6 +12,7 @@ template <bool wr> u8 chr_access(u16 addr, u8 v = 0);
 void signal_scanline(int scanline = -1);  // Default parameter for compatibility
 void load(const char* fileName);
 void reset();
+void unload();
 bool loaded();
 
 // Stubs for mapper features - will be implemented in mapper PRs

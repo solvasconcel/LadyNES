@@ -114,6 +114,16 @@ void reset()
     }
 }
 
+void unload()
+{
+    if (mapper) {
+        delete mapper;
+        mapper = nullptr;
+    }
+    currentRomPath.clear();
+    currentMapperId = 0;
+}
+
 bool loaded()
 {
     return mapper != nullptr;

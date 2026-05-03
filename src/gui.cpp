@@ -1,4 +1,7 @@
 #include <csignal>
+#include <cstring>
+#include <dirent.h>
+#include <unistd.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include "Sound_Queue.h"
@@ -9,8 +12,79 @@
 #include "gui.hpp"
 #include "config.hpp"
 #include "savestate.hpp"
+#include "imgui.h"
+#include "imgui_impl_sdl2.h"
+#include "imgui_impl_sdlrenderer2.h"
 
 namespace GUI {
+
+/* Setup ImGui style - DuckStation inspired */
+void setup_imgui_style()
+{
+    ImGuiStyle& style = ImGui::GetStyle();
+    
+    // Dark theme with anthracite colors
+    ImVec4* colors = style.Colors;
+    
+    colors[ImGuiCol_Text]                   = ImVec4(0.92f, 0.92f, 0.92f, 1.00f);
+    colors[ImGuiCol_TextDisabled]           = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
+    colors[ImGuiCol_WindowBg]               = ImVec4(0.10f, 0.10f, 0.10f, 1.00f);
+    colors[ImGuiCol_ChildBg]                = ImVec4(0.08f, 0.08f, 0.08f, 1.00f);
+    colors[ImGuiCol_PopupBg]                = ImVec4(0.12f, 0.12f, 0.12f, 1.00f);
+    colors[ImGuiCol_Border]                 = ImVec4(0.20f, 0.20f, 0.20f, 0.50f);
+    colors[ImGuiCol_BorderShadow]           = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+    colors[ImGuiCol_FrameBg]                = ImVec4(0.15f, 0.15f, 0.15f, 1.00f);
+    colors[ImGuiCol_FrameBgHovered]         = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
+    colors[ImGuiCol_FrameBgActive]           = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
+    colors[ImGuiCol_TitleBg]                = ImVec4(0.08f, 0.08f, 0.08f, 1.00f);
+    colors[ImGuiCol_TitleBgActive]           = ImVec4(0.12f, 0.12f, 0.12f, 1.00f);
+    colors[ImGuiCol_TitleBgCollapsed]       = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
+    colors[ImGuiCol_MenuBarBg]              = ImVec4(0.15f, 0.15f, 0.15f, 1.00f);
+    colors[ImGuiCol_ScrollbarBg]            = ImVec4(0.05f, 0.05f, 0.05f, 1.00f);
+    colors[ImGuiCol_ScrollbarGrab]          = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
+    colors[ImGuiCol_ScrollbarGrabHovered]   = ImVec4(0.30f, 0.30f, 0.30f, 1.00f);
+    colors[ImGuiCol_ScrollbarGrabActive]    = ImVec4(0.35f, 0.35f, 0.35f, 1.00f);
+    colors[ImGuiCol_CheckMark]              = ImVec4(0.30f, 0.50f, 0.80f, 1.00f);
+    colors[ImGuiCol_SliderGrab]             = ImVec4(0.30f, 0.50f, 0.80f, 1.00f);
+    colors[ImGuiCol_SliderGrabActive]       = ImVec4(0.35f, 0.55f, 0.85f, 1.00f);
+    colors[ImGuiCol_Button]                 = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
+    colors[ImGuiCol_ButtonHovered]          = ImVec4(0.30f, 0.30f, 0.30f, 1.00f);
+    colors[ImGuiCol_ButtonActive]            = ImVec4(0.25f, 0.45f, 0.75f, 1.00f);
+    colors[ImGuiCol_Header]                 = ImVec4(0.20f, 0.40f, 0.70f, 0.55f);
+    colors[ImGuiCol_HeaderHovered]          = ImVec4(0.25f, 0.45f, 0.75f, 0.80f);
+    colors[ImGuiCol_HeaderActive]           = ImVec4(0.30f, 0.50f, 0.80f, 1.00f);
+    colors[ImGuiCol_Separator]              = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
+    colors[ImGuiCol_SeparatorHovered]       = ImVec4(0.25f, 0.45f, 0.75f, 1.00f);
+    colors[ImGuiCol_SeparatorActive]        = ImVec4(0.30f, 0.50f, 0.80f, 1.00f);
+    colors[ImGuiCol_ResizeGrip]             = ImVec4(0.30f, 0.50f, 0.80f, 0.50f);
+    colors[ImGuiCol_ResizeGripHovered]     = ImVec4(0.35f, 0.55f, 0.85f, 0.67f);
+    colors[ImGuiCol_ResizeGripActive]       = ImVec4(0.40f, 0.60f, 0.90f, 0.95f);
+    
+    // Padding and spacing - DuckStation style
+    style.WindowPadding       = ImVec2(8, 8);
+    style.FramePadding        = ImVec2(8, 4);
+    style.CellPadding         = ImVec2(4, 2);
+    style.ItemSpacing         = ImVec2(8, 4);
+    style.ItemInnerSpacing   = ImVec2(4, 4);
+    style.TouchExtraPadding  = ImVec2(0, 0);
+    style.IndentSpacing      = 20.0f;
+    style.ScrollbarSize      = 12.0f;
+    style.GrabMinSize        = 8.0f;
+    
+    // Borders
+    style.WindowBorderSize   = 0.0f;
+    style.ChildBorderSize    = 0.0f;
+    style.PopupBorderSize    = 1.0f;
+    style.FrameBorderSize    = 0.0f;
+    
+    // Rounding
+    style.WindowRounding     = 4.0f;
+    style.ChildRounding      = 4.0f;
+    style.FrameRounding      = 4.0f;
+    style.PopupRounding      = 4.0f;
+    style.ScrollbarRounding  = 4.0f;
+    style.GrabRounding       = 4.0f;
+}
 
 // SDL structures:
 SDL_Window* window;
@@ -33,6 +107,8 @@ FileMenu* fileMenu;
 
 bool pause = true;
 bool fast_forward = false;
+bool is_ingame = false;
+bool show_rom_browser = false;
 const int FAST_FORWARD_MULTIPLIER = 8;
 
 /* Set the window size multiplier */
@@ -131,7 +207,7 @@ void init()
     // Initialize graphics structures:
     window      = SDL_CreateWindow  ("LaiNES",
                                      SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                     WIDTH * last_window_size, HEIGHT * last_window_size, 0);
+                                     LAUNCHER_WIDTH, LAUNCHER_HEIGHT, 0);
 
     // Set window icon:
     SDL_Surface* icon = IMG_Load("res/laines_icon.png");
@@ -142,7 +218,19 @@ void init()
 
     renderer    = SDL_CreateRenderer(window, -1,
                                      SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    SDL_RenderSetLogicalSize(renderer, WIDTH, HEIGHT);
+    // Don't set logical size for launcher, set later for game
+
+        // Inicialização do ImGui
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+    
+    // Apply DuckStation-like style
+    setup_imgui_style();
+
+    ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
+    ImGui_ImplSDLRenderer2_Init(renderer);
+
 
     gameTexture = SDL_CreateTexture (renderer,
                                      SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
@@ -328,34 +416,24 @@ void render()
 {
     SDL_RenderClear(renderer);
 
-    // Draw the NES screen:
-    if (Cartridge::loaded())
+    // Draw the NES screen or background:
+    if (Cartridge::loaded()) {
         SDL_RenderCopy(renderer, gameTexture, NULL, NULL);
-    else
-        SDL_RenderCopy(renderer, background, NULL, NULL);
-
-    // Draw the menu:
-    if (pause) {
-        // If stretch aspect is enabled, temporarily restore logical sizing
-        // so the menu scales properly
-        if (fullscreen_mode && stretch_aspect) {
-            SDL_RenderSetLogicalSize(renderer, WIDTH, HEIGHT);
-        }
-
-        menu->render();
-
-        // Restore stretch mode if it was enabled
-        if (fullscreen_mode && stretch_aspect) {
-            SDL_RenderSetLogicalSize(renderer, 0, 0);
-        }
+    } else {
+        // Launcher mode - clear with neutral color
+        SDL_SetRenderDrawColor(renderer, 64, 64, 64, 255);
+        SDL_RenderClear(renderer);
     }
 
-    // Draw fast forward indicator:
-    if (fast_forward && !pause) {
+    // Draw fast forward indicator (only when in-game and not paused):
+    if (fast_forward && Cartridge::loaded() && !pause) {
         SDL_Texture* ff_indicator = gen_text(">>", { 255, 255, 0 });
         render_texture(ff_indicator, TEXT_RIGHT, 0);
         SDL_DestroyTexture(ff_indicator);
     }
+
+    ImGui::Render();
+    ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
 
     SDL_RenderPresent(renderer);
 }
@@ -364,7 +442,6 @@ void render()
 void toggle_pause()
 {
     pause = not pause;
-    menu  = mainMenu;
 
     // Disable fast forward when pausing
     if (pause)
@@ -380,7 +457,6 @@ void toggle_pause()
 void set_paused(bool paused)
 {
     pause = paused;
-    menu  = paused ? mainMenu : nullptr;
 
     // Disable fast forward when pausing
     if (pause)
@@ -390,6 +466,14 @@ void set_paused(bool paused)
         SDL_SetTextureColorMod(gameTexture,  60,  60,  60);
     else
         SDL_SetTextureColorMod(gameTexture, 255, 255, 255);
+}
+
+/* Close the current game */
+void close_game()
+{
+    Cartridge::unload();
+    pause = true;
+    fast_forward = false;
 }
 
 /* Prompt for a key, return the scancode */
@@ -424,11 +508,155 @@ int query_button()
 }
 
 /* Run the emulator */
+/* Render the launcher interface */
+void render_launcher()
+{
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+    ImGui::Begin("Launcher", nullptr, 
+        ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | 
+        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+
+    // Title
+    ImGui::SetCursorPosY(ImGui::GetWindowHeight() * 0.1f);
+    ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("SosiNES").x * 2) * 0.5f);
+    ImGui::TextColored(ImVec4(0.30f, 0.50f, 0.80f, 1.0f), "SosiNES");
+    ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("Emulador NES Moderno").x) * 0.5f);
+    ImGui::Text("Emulador NES Moderno");
+
+    // Columns for Actions and Settings
+    ImGui::Columns(2, "LauncherColumns", false);
+    ImGui::SetColumnWidth(0, ImGui::GetWindowWidth() * 0.5f);
+
+    // Left Panel: Actions
+    ImGui::Text("Ações");
+    ImGui::Separator();
+    if (ImGui::Button("Load ROM", ImVec2(-1, 40))) {
+        show_rom_browser = true;
+    }
+
+    ImGui::NextColumn();
+
+    // Right Panel: Settings
+    ImGui::Text("Configurações");
+    ImGui::Separator();
+    if (ImGui::Button("Engrenagem", ImVec2(-1, 40))) {
+        ImGui::OpenPopup("Settings");
+    }
+    if (ImGui::BeginPopup("Settings")) {
+        ImGui::Checkbox("Fullscreen", &fullscreen_mode);
+        if (ImGui::IsItemEdited()) set_fullscreen(fullscreen_mode);
+        ImGui::Checkbox("Aspect Ratio Stretch", &stretch_aspect);
+        if (ImGui::IsItemEdited()) set_aspect_stretch(stretch_aspect);
+        ImGui::Checkbox("Smooth Scaling", &scaling_mode);
+        if (ImGui::IsItemEdited()) set_scaling_mode(scaling_mode);
+        ImGui::EndPopup();
+    }
+
+    ImGui::Columns(1);
+
+    ImGui::End();
+
+    // ROM Browser Modal
+    if (show_rom_browser) {
+        ImGui::OpenPopup("Selecionar ROM");
+        show_rom_browser = false;
+    }
+    if (ImGui::BeginPopupModal("Selecionar ROM", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        static char current_dir[512];
+        static bool dir_initialized = false;
+        
+        if (!dir_initialized) {
+            getcwd(current_dir, 512);
+            dir_initialized = true;
+        }
+        
+        ImGui::Text("Diretório: %s", current_dir);
+        ImGui::Separator();
+        
+        // List directories and .nes files
+        DIR* dp = opendir(current_dir);
+        if (dp) {
+            struct dirent* dirp;
+            while ((dirp = readdir(dp)) != nullptr) {
+                std::string name = dirp->d_name;
+                std::string full_path = std::string(current_dir) + "/" + name;
+                
+                if (name[0] == '.' && name != "..") continue;
+                
+                if (dirp->d_type == DT_DIR) {
+                    if (ImGui::Selectable((name + "/").c_str())) {
+                        strcpy(current_dir, full_path.c_str());
+                    }
+                } else if (name.size() > 4 && name.substr(name.size() - 4) == ".nes") {
+                    if (ImGui::Selectable(name.c_str())) {
+                        // Load the ROM
+                        Cartridge::load(full_path.c_str());
+                        if (Cartridge::loaded()) {
+                            pause = false;
+                            set_size(last_window_size); // Resize to game size
+                            ImGui::CloseCurrentPopup();
+                        }
+                    }
+                }
+            }
+            closedir(dp);
+        }
+        
+        ImGui::Separator();
+        if (ImGui::Button("Fechar")) {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+}
+
+/* Render the pause menu overlay */
+void render_pause_menu()
+{
+    ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.5f - 150, ImGui::GetIO().DisplaySize.y * 0.5f - 150));
+    ImGui::SetNextWindowSize(ImVec2(300, 250));
+    ImGui::Begin("Pause Menu", nullptr, 
+        ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+
+    if (ImGui::Button("Resume", ImVec2(-1, 40))) {
+        pause = false;
+    }
+    if (ImGui::Button("Save State", ImVec2(-1, 40))) {
+        std::string filename = SaveState::get_default_filename();
+        if (!filename.empty()) {
+            SaveState::save(filename.c_str());
+        }
+    }
+    if (ImGui::Button("Load State", ImVec2(-1, 40))) {
+        std::string filename = SaveState::get_default_filename();
+        if (!filename.empty()) {
+            SaveState::load(filename.c_str());
+        }
+    }
+    ImGui::Separator();
+    ImGui::Text("Quick Settings");
+    ImGui::Checkbox("Fullscreen", &fullscreen_mode);
+    if (ImGui::IsItemEdited()) set_fullscreen(fullscreen_mode);
+    ImGui::Checkbox("Aspect Ratio Stretch", &stretch_aspect);
+    if (ImGui::IsItemEdited()) set_aspect_stretch(stretch_aspect);
+    ImGui::Checkbox("Smooth Scaling", &scaling_mode);
+    if (ImGui::IsItemEdited()) set_scaling_mode(scaling_mode);
+
+    ImGui::Separator();
+    if (ImGui::Button("Close ROM", ImVec2(-1, 40))) {
+        close_game();
+        // Resize back to launcher
+        SDL_SetWindowSize(window, LAUNCHER_WIDTH, LAUNCHER_HEIGHT);
+        SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+    }
+
+    ImGui::End();
+}
+
 void run()
 {
     SDL_Event e;
-
-    // Framerate control:
     u32 frameStart, frameTime;
     const int FPS   = 60;
     const int DELAY = 1000.0f / FPS;
@@ -437,33 +665,39 @@ void run()
     {
         frameStart = SDL_GetTicks();
 
-        // Handle events:
-        while (SDL_PollEvent(&e))
-            switch (e.type)
-            {
-                case SDL_QUIT: return;
-                case SDL_KEYDOWN:
-                    if (keys[SDL_SCANCODE_ESCAPE] and Cartridge::loaded())
-                        toggle_pause();
-                    else if (pause)
-                        menu->update(keys);
+        ImGui_ImplSDLRenderer2_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
+
+        // Always process ImGui events
+        while (SDL_PollEvent(&e)) {
+            ImGui_ImplSDL2_ProcessEvent(&e);
+            if (e.type == SDL_QUIT) return;
+            if (e.type == SDL_KEYDOWN) {
+                if (e.key.keysym.scancode == SDL_SCANCODE_ESCAPE && Cartridge::loaded() && !pause) {
+                    pause = true;
+                }
             }
+        }
 
-        // Fast forward: hold Tab to enable
-        fast_forward = keys[SDL_SCANCODE_TAB] and Cartridge::loaded() and not pause;
-
-        if (not pause) {
-            // Run multiple frames when fast forwarding
+        // State machine
+        if (!Cartridge::loaded()) {
+            // LAUNCHER STATE
+            render_launcher();
+        } else if (Cartridge::loaded() && !pause) {
+            // GAMEPLAY STATE
+            fast_forward = keys[SDL_SCANCODE_TAB];
             int frames_to_run = fast_forward ? FAST_FORWARD_MULTIPLIER : 1;
             for (int i = 0; i < frames_to_run; i++) {
                 CPU::run_frame();
             }
+        } else if (Cartridge::loaded() && pause) {
+            // PAUSE STATE
+            render_pause_menu();
         }
 
-        // Always render to maintain smooth 60 FPS visuals
         render();
 
-        // Wait to maintain framerate (skip when fast forwarding):
         if (!fast_forward) {
             frameTime = SDL_GetTicks() - frameStart;
             if (frameTime < DELAY)
@@ -471,6 +705,5 @@ void run()
         }
     }
 }
-
 
 }
