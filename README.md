@@ -4,14 +4,14 @@ LadyNES (fork of LaiNES)
 A friendly fork of LaiNES, a compact and cycle-accurate NES emulator, now featuring a modern Bento-style launcher, native file dialogs, and customizable controls.
 
 ## Features
-- **Modern Bento Launcher**: Clean interface with recent ROMs, logo display, and organized settings
-- **Native File Dialogs**: Uses Native File Dialog Extended (NFD) for native file browsing
-- **Customizable Controls**: SNES9x-style keybinding window for keyboard and joystick configuration
+- **Modern Bento Launcher**: Clean interface with recent ROMs, and organized GUI acessible settings.
+- **Native File Dialogs**: Uses Native File Dialog Extended (NFD) for native file browsing and selection instead of the LaiNES menu.
+- **Customizable Controls**: Intuitive keybinding window for keyboard and joystick configuration
 - **Dynamic Window Title**: Shows current game name in window title
 - **Savestate Support**: Save and load states with full emulator state preservation
 - **Multiple Mapper Support**: Compatible with most common NES mappers
 - **Expansion Audio**: VRC6 audio support
-- **Fast Forward**: 8x speed with Tab key
+- **Fast Forward**: About 8x speed with Tab key
 
 ## Requirements
 LadyNES should run on any Unix system compatible with the following tools:
