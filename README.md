@@ -3,6 +3,21 @@ LadyNES (fork of LaiNES)
 
 A friendly fork of LaiNES, a compact and cycle-accurate NES emulator, now featuring a modern Bento-style launcher, native file dialogs, and customizable controls.
 
+## Screenshots
+
+### Bento Launcher & Pause Interface
+
+| Launcher Dashboard | Pause & Settings Menu |
+| :---: | :---: |
+| ![Launcher](https://i.imgur.com/FAjh984_d.webp?maxwidth=760&fidelity=grand) | ![Settings](https://i.imgur.com/8DEGKH3_d.webp?maxwidth=760&fidelity=grand) |
+
+### Gameplay Experience
+
+| Mega Man 2 | Continuation (Mid-Level) |
+| :---: | :---: |
+| ![Gameplay 1](https://i.imgur.com/KnOHslc.png) | ![Gameplay 2](https://i.imgur.com/mVTI7k2_d.webp?maxwidth=760&fidelity=grand) |
+
+
 ## Features
 - **Modern Bento Launcher**: Clean interface with recent ROMs, and organized GUI acessible settings.
 - **Native File Dialogs**: Uses Native File Dialog Extended (NFD) for native file browsing and selection instead of the LaiNES menu.
@@ -200,3 +215,4 @@ void exec()
 - Tick-by-tick breakdown of 6502 instructions: http://nesdev.com/6502_cpu.txt
 - [Dear ImGui](https://github.com/ocornut/imgui) - Immediate mode GUI for C++
 - [Native File Dialog Extended](https://github.com/btzy/nativefiledialog-extended) - Native file dialogs for Linux, Windows, and macOS
+
