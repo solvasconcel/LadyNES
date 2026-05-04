@@ -1,66 +1,76 @@
-LaiNES
+LadyNES (fork of LaiNES)
 ======
 
-Compact, cycle-accurate NES emulator.
+A friendly fork of LaiNES, a compact and cycle-accurate NES emulator, now featuring a modern Bento-style launcher, native file dialogs, and customizable controls.
 
-![File Browser](http://i.imgur.com/2tuDlCw.png)
-![Super Mario Bros. 3](http://i.imgur.com/Gm4QWsE.png)
-![Kirby's Adventure](http://i.imgur.com/xA2vwim.png)
-
-![Star Wars](http://i.imgur.com/j3MmRba.png)
-![Super Mario Bros.](http://i.imgur.com/yal0ps1.png)
-![The Legend of Zelda](http://i.imgur.com/OLO02ij.png)
+## Features
+- **Modern Bento Launcher**: Clean interface with recent ROMs, logo display, and organized settings
+- **Native File Dialogs**: Uses Native File Dialog Extended (NFD) for native file browsing
+- **Customizable Controls**: SNES9x-style keybinding window for keyboard and joystick configuration
+- **Dynamic Window Title**: Shows current game name in window title
+- **Savestate Support**: Save and load states with full emulator state preservation
+- **Multiple Mapper Support**: Compatible with most common NES mappers
+- **Expansion Audio**: VRC6 audio support
+- **Fast Forward**: 8x speed with Tab key
 
 ## Requirements
-LaiNES should run on any Unix system that is compatible with the following tools.
-- SCons
-- C++14 compatible compiler (e.g. clang++)
+LadyNES should run on any Unix system compatible with the following tools:
+- SCons (build system)
+- C++14 compatible compiler (e.g., clang++)
 - SDL2 (including sdl2-ttf and sdl2-image)
+- dbus-1 (for Native File Dialog Portal mode on Linux)
 
 ## Building and running
 Install the dependencies:
 ```sh
 # Arch Linux:
-sudo pacman -S clang scons sdl2 sdl2_image sdl2_ttf
+sudo pacman -S clang scons sdl2 sdl2_image sdl2_ttf dbus
 
 # Debian-based systems:
-sudo apt-get install clang scons libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev
+sudo apt-get install clang scons libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev libdbus-1-dev
 
 # Mac OS X:
 brew install scons sdl2 sdl2_image sdl2_ttf
 ```
 
-Compile and run:
+Clone and build:
 ```sh
-git clone --recursive https://github.com/AndreaOrru/LaiNES && cd LaiNES
+git clone --recursive <your-repo-url> && cd LadyNES
 scons -j4
-./laines
+./LadyNES
 ```
 
 ## Usage
-The emulator comes bundled with a simple GUI to navigate the filesystem and set preferences. ESC toggles between emulation and menu.
+LadyNES features a modern Bento-style launcher with easy ROM selection, recent ROMs list, and organized settings.
 
-### Menu Navigation
-- **Arrow Keys**: Navigate up/down through menu items
-- **Enter**: Select menu item
-- **Page Up/Down**: Navigate one page at a time
-- **Letter Keys (File Browser)**: Jump to entries starting with that letter
-
-The main menu includes a **Reset** option to reload and restart the current ROM (only enabled when a ROM is loaded).
+### Launcher Features
+- **Logo Display**: Shows LadyNES logo on startup
+- **Recent ROMs**: Quick access to recently played games (persistent across sessions)
+- **Native File Dialog**: Click "Select ROM" to browse with native system dialog (NFD)
+- **Settings**: Access video, audio, and control settings
+- **Controller Setup**: Click the 🎮 button to configure keyboard and joystick bindings
 
 ### Gameplay Controls
-- **ESC**: Toggle between gameplay and menu
+- **ESC**: Toggle between gameplay and launcher
 - **Tab** (hold): Fast forward mode (8x speed, indicated by ">>" in top-right corner)
 
+### Keybinding Configuration
+Access the controller configuration window (🎮 button) to customize:
+- **Keyboard bindings**: Set keys for Player 1 and Player 2 (Up, Down, Left, Right, A, B, Start, Select)
+- **Joystick bindings**: Configure button mappings for connected controllers
+- Uses SNES9x-style interface with tabs for easy configuration
+
 ### Savestate Support
-LaiNES includes savestate functionality accessible through the main menu (**Save State** and **Load State** options). Savestates preserve the complete emulator state including CPU, PPU, APU, mapper state, and expansion audio. Savestates are automatically stored per-ROM and can be loaded at any time.
+LadyNES includes savestate functionality accessible through the launcher (**Save State** and **Load State** options). Savestates preserve the complete emulator state including CPU, PPU, APU, mapper state, and expansion audio. Savestates are automatically stored per-ROM and can be loaded at any time.
 
-The size of the window and the controls are customizable. LaiNES supports multiple controllers and should work with joysticks as well. The default controls for the first player are as follows:
-
-![Controller Settings](http://i.imgur.com/ERQ2nmJ.png)
+### Window Features
+- **Dynamic Title**: Window title shows "LadyNES - [Game Name]" when a game is loaded
+- **Resizable**: Window size is customizable (default 2x = 512x480)
+- **Fullscreen**: Toggle fullscreen mode from settings
+- **Multiple Controllers**: Supports keyboard and joystick input for two players
 
 ## Compatibility
-LaiNES implements the most common mappers, which should be enough for a good percentage of the games:
+LadyNES implements the most common mappers, providing good compatibility with a wide range of NES games:
 - NROM (Mapper 000)
 - MMC1 / SxROM (Mapper 001)
 - UxROM (Mapper 002)
@@ -81,7 +91,16 @@ http://tuxnes.sourceforge.net/nesmapper.txt
 ## Technical notes
 The 6502 CPU and the PPU were originally implemented in just 219 and 283 lines of code respectively, though they have since grown to include full unofficial opcode support and enhanced accuracy.
 Meta-programming is used extensively to keep the codebase compact.
-Here is a good example of how that is achieved:
+
+### Key Technical Features:
+- **Cycle-accurate emulation**: CPU runs at 1.79 MHz, PPU at 5.37 MHz (3x CPU speed)
+- **Template-based instruction decoding**: Compact opcode implementation using C++ templates
+- **Native File Dialogs**: Integrated NFD with Portal mode for Linux (requires dbus-1)
+- **Modern UI**: ImGui-based Bento launcher with dark theme
+- **Dynamic window management**: SDL2 window with runtime title updates
+- **Input flexibility**: Supports both keyboard and joystick with runtime rebinding
+
+Here is an example of the meta-programming approach used:
 ```c++
 /* Cycle emulation.
  *     For each CPU cycle, we call the PPU thrice, because it runs at 3 times the frequency. */
@@ -124,6 +143,7 @@ void exec()
 
 ## Known issues
 * If you're experiencing audio issues on Linux, try typing `export SDL_AUDIODRIVER=ALSA` before running the emulator.
+* NFD Portal mode requires dbus-1 to be installed and running.
 
 ## Contributors
 * [Jeff Katz](https://github.com/kraln) - Major enhancements including:
@@ -136,9 +156,18 @@ void exec()
   - Configuration saving system
 * [PudgeMa](https://github.com/PudgeMa) - Scrollable menu and bug fixes.
 * [tyfkda](https://github.com/tyfkda) - Show error message instead of segfault for unsupported mappers.
+* **LadyNES Fork** - Additional features:
+  - Modern Bento-style launcher with logo display
+  - Native File Dialog Extended (NFD) integration
+  - SNES9x-style keybinding configuration window
+  - Dynamic window title with current game name
+  - Recent ROMs system with persistence
+  - Improved UI/UX with dark theme
 
 ## References and credits
 - Special thanks to [Ulf Magnusson](https://github.com/ulfalizer) for the invaluable [PPU diagram](http://wiki.nesdev.com/w/images/d/d1/Ntsc_timing.png) and for his [excellent implementation](https://github.com/ulfalizer/nesalizer) which was a big source of inspiration.
 - blargg's APU sound chip emulator: http://blargg.8bitalley.com/libs/audio.html#Nes_Snd_Emu
 - Complete hardware reference: http://problemkaputt.de/everynes.htm
 - Tick-by-tick breakdown of 6502 instructions: http://nesdev.com/6502_cpu.txt
+- [Dear ImGui](https://github.com/ocornut/imgui) - Immediate mode GUI for C++
+- [Native File Dialog Extended](https://github.com/btzy/nativefiledialog-extended) - Native file dialogs for Linux, Windows, and macOS
